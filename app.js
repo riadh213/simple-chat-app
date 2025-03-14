@@ -1,62 +1,55 @@
-const express = require('express');
-const expressLayouts = require('express-ejs-layouts');
-const mongoose = require('mongoose');
-const passport = require('passport');
-const flash = require('connect-flash');
-const session = require('express-session');
+const path = require('path')
+const logger = require('morgan')
+const bodyParser = require('body-parser')
+const express = require('express')
+const app = express()
+// Socket.IO
+const http = require('http').Server(app)
+const io = require('socket.io')(http)
 
-const app = express();
+const port = 3002
+// Start the server
+http.listen(port, () => {
+    console.log('Listening on port ' + port)
+})
 
-// Passport Config
-require('./config/passport')(passport);
-
-// DB Config
-const db = require('./config/keys').mongoURI;
-
-// Connect to MongoDB
-mongoose
-  .connect(
-    db,
-    { useNewUrlParser: true ,useUnifiedTopology: true}
-  )
-  .then(() => console.log('MongoDB Connected'))
-  .catch(err => console.log(err));
-
-// EJS
-app.use(expressLayouts);
-app.set('view engine', 'ejs');
-
-// Express body parser
-app.use(express.urlencoded({ extended: true }));
-
-// Express session
-app.use(
-  session({
-    secret: 'secret',
-    resave: true,
-    saveUninitialized: true
-  })
-);
-
-// Passport middleware
-app.use(passport.initialize());
-app.use(passport.session());
-
-// Connect flash
-app.use(flash());
-
-// Global variables
-app.use(function(req, res, next) {
-  res.locals.success_msg = req.flash('success_msg');
-  res.locals.error_msg = req.flash('error_msg');
-  res.locals.error = req.flash('error');
-  next();
-});
+// view engine setup
+app.set('view engine', 'ejs')
+app.set('views', path.join(__dirname, 'views'))
+app.use(express.static(path.join(__dirname, 'public')))
+// middleware
+app.use(logger('dev'))
 
 // Routes
-app.use('/', require('./routes/index.js'));
-app.use('/users', require('./routes/users.js'));
+app.get('/chat', (req, res) => {
+    res.render('chat')
+})
 
-const PORT = process.env.PORT || 5000;
+io.on('connection', function (socket) {
 
-app.listen(PORT, console.log(`Server running on  ${PORT}`));
+    // Every socket connection has a unique ID
+    console.log('new connection: ' + socket.id)
+
+    // Message Recieved
+    socket.on('msg', (message) => {
+        // Broadcast to everyone else (except the sender)
+        socket.broadcast.emit('msg', {
+            from: socket.id,
+            message: message
+        })
+        // Send back the same message to the sender
+        socket.emit('msg', {
+            from: socket.id,
+            message: message
+        })
+        // You could just do: io.emit('msg', ...)
+        // which will send the message to all, including
+        // the sender.
+    })
+
+    // Disconnected
+    socket.on('disconnect', function () {
+        console.log('disconnect: ' + socket.id)
+        // io.emit('disconnect', socket.id)
+    })
+})
