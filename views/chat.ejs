@@ -12,10 +12,21 @@
 <body>
     <div class="container">
         <div class="row">
-            <div class="col">
-                <form action="" id="messageForm">
+            <div class="col-4">
+                <form id="loginForm">
                     <div class="input-group mb-3">
-                        <!-- <input type="text" class="form-control" placeholder="Recipient's username" aria-label="Recipient's username" > -->
+                        <input type="text" class="form-control" autocomplete="off" placeholder="name..." id="nameInput">
+                        <div class="input-group-append">
+                            <button class="btn btn-success" type="submit">Login</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col">
+                <form id="messageForm" class="hidden">
+                    <div class="input-group mb-3">
                         <input type="text" class="form-control" autocomplete="off" placeholder="chat..." id="messageInput">
                         <div class="input-group-append">
                             <button class="btn btn-outline-primary" type="submit">Send</button>

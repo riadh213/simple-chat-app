@@ -6,3 +6,7 @@
 .chat-message:nth-child(even) {
     background-color: rgba(235, 231, 231, 0.35)
 }
+
+.hidden {
+    display: none;
+}
